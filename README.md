@@ -3,10 +3,10 @@ Este projeto fornece um guia passo a passo para executar um projeto Laravel 10 u
 
 Começando
 1. Clone o Projeto
-<code>
+<pre>
 git clone https://github.com/cleversonmvieira/Laravel10_com_docker.git laravel-10
 cd laravel-10/
-</code>
+</pre>
 
 3. Crie o Arquivo .env
 Faça uma cópia do arquivo .env.example para criar o arquivo .env.
