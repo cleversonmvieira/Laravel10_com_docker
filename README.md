@@ -1,5 +1,5 @@
 <h2>Configuração do Laravel 10 com Docker</h2>
-Este projeto fornece um guia passo a passo para executar um projeto Laravel 10 usando o Docker. <br>
+Este projeto fornece um guia passo a passo para executar um projeto Laravel 10 usando o Docker. <br><br>
 
 1. Clone o Projeto
 <pre>
