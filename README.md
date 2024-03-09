@@ -1,16 +1,18 @@
-Configuração do Laravel 10 com Docker
+<h2>Configuração do Laravel 10 com Docker</h2>
 Este projeto fornece um guia passo a passo para executar um projeto Laravel 10 usando o Docker.
 
 Começando
 1. Clone o Projeto
+<code>
 git clone https://github.com/cleversonmvieira/Laravel10_com_docker.git laravel-10
 cd laravel-10/
+</code>
 
-2. Crie o Arquivo .env
+3. Crie o Arquivo .env
 Faça uma cópia do arquivo .env.example para criar o arquivo .env.
 cp .env.example .env
 
-3. Atualize as Variáveis de Ambiente
+4. Atualize as Variáveis de Ambiente
 Abra o arquivo .env e atualize as seguintes variáveis de ambiente:
 APP_NAME="Laravel 10 com Docker"
 APP_URL=http://localhost
