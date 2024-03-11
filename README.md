@@ -2,12 +2,12 @@
 
 Este tutorial fornece instruções detalhadas sobre como configurar um projeto Laravel 10 com Docker, incluindo Nginx, PHPMyAdmin e MySQL, utilizando o Windows Subsystem for Linux (WSL). <br>
 
-Pré-requisitos
-Docker e Docker Compose instalados no sistema.
-Windows Subsystem for Linux (WSL) instalado (versão 2 recomendada).
-Composer instalado no WSL.
+<h4>Pré-requisitos</h4><br>
+Docker e Docker Compose instalados no sistema.<br>
+Windows Subsystem for Linux (WSL) instalado (versão 2 recomendada).<br>
+Composer instalado no WSL.<br>
 
-Passo 1: Criar um novo projeto Laravel
+<h3>Passo 1: Criar um novo projeto Laravel</h3>
 
 <pre>
 # Substitua "nomedoseuprojeto" pelo nome desejado
@@ -16,12 +16,12 @@ cd nomedoseuprojeto
 </pre>
 
 
-Passo 2: Criar os arquivos Docker
-Dockerfile
+<h3>Passo 2: Criar os arquivos Docker</h3><br>
+Crie um arquivo chamado "Dockerfile" na raiz do seu projeto Laravel:
 
 <pre>
 # Use a imagem oficial do PHP com FPM
-FROM php:7.4-fpm
+FROM php:8.2-fpm
 
 # Instale as dependências necessárias
 RUN apt-get update && \
@@ -61,7 +61,10 @@ CMD ["php-fpm"]
 </pre>
 
 
-Arquivos Nginx
+Arquivos Nginx <br>
+
+Crie uma pasta chamada nginx na raiz do seu projeto Laravel e adicione os arquivos default e nginx.conf:<br>
+
 nginx/default:
 
 <pre>
@@ -123,8 +126,8 @@ http {
 </pre>
 
 
-Passo 3: Configurar o Docker Compose
-docker-compose.yml
+<h3>Passo 3: Configurar o Docker Compose</h3><br>
+Crie um arquivo chamado "docker-compose.yml" na raiz do seu projeto Laravel:
 
 <pre>
 version: '3'
@@ -169,8 +172,8 @@ networks:
     driver: bridge
 </pre>
 
-Passo 4: Criar o arquivo de entrada Docker
-docker-entrypoint.sh
+<h3>Passo 4: Criar o arquivo de entrada Docker</h3><br>
+Crie um arquivo chamado docker-entrypoint.sh na raiz do seu projeto Laravel:
 
 <pre>
 #!/bin/bash
@@ -193,14 +196,14 @@ docker-compose up -d --build
 
 Este comando irá construir as imagens Docker e iniciar os contêineres em segundo plano.
 
-Passo 6: Configurar o ambiente Laravel
+<h3>Passo 6: Configurar o ambiente Laravel</h3><br>
 No terminal WSL, acesse o contêiner do aplicativo Laravel:
 
 <pre>
 docker-compose exec app bash
 </pre>
 
-Dentro do contêiner, execute os seguintes comandos para configurar o ambiente Laravel:
+Dentro do contêiner, execute os seguintes comandos para configurar o ambiente Laravel:<br>
 
 <pre>
 cp .env.example .env
@@ -210,10 +213,12 @@ php artisan migrate
 exit
 </pre>
 
-Passo 7: Acessar o Aplicativo Laravel
-Abra seu navegador e acesse http://localhost. Você deverá ver a página inicial do seu projeto Laravel.
+<h3>Passo 7: Acessar o Aplicativo Laravel</h3><br>
+Abra seu navegador e acesse <a href="http://localhost" tarjet="_blank">http://localhost</a>. Você deverá ver a página inicial do seu projeto Laravel.
 
-Passo 8: Acessar o PHPMyAdmin
-Abra seu navegador e acesse http://localhost:8080. Use as credenciais definidas no arquivo docker-compose.yml para fazer login no PHPMyAdmin.
+<h3>Passo 8: Acessar o PHPMyAdmin</h3><br>
+Abra seu navegador e acesse <a href="http://localhost:8080" tarjet="_blank">http://localhost:8080</a>. Use as credenciais definidas no arquivo docker-compose.yml para fazer login no PHPMyAdmin.
+
+<br>
 
 Agora você configurou com sucesso um ambiente Docker para o seu projeto Laravel 10, incluindo Nginx, PHPMyAdmin e MySQL, usando o Windows Subsystem for Linux (WSL). Certifique-se de adaptar as configurações de acordo com suas necessidades específicas.
