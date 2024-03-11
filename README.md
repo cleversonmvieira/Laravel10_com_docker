@@ -1,66 +1,219 @@
-<h2>Configuração do Laravel 10 com Docker</h2>
-Este projeto fornece um guia passo a passo para executar um projeto Laravel 10 usando o Docker. <br><br>
+<h2>Tutorial: Configuração do Projeto Laravel 10 com Docker e WSL</h2>
 
-1. Clone o Projeto
+Este tutorial fornece instruções detalhadas sobre como configurar um projeto Laravel 10 com Docker, incluindo Nginx, PHPMyAdmin e MySQL, utilizando o Windows Subsystem for Linux (WSL). <br>
+
+Pré-requisitos
+Docker e Docker Compose instalados no sistema.
+Windows Subsystem for Linux (WSL) instalado (versão 2 recomendada).
+Composer instalado no WSL.
+
+Passo 1: Criar um novo projeto Laravel
+
 <pre>
-git clone https://github.com/cleversonmvieira/Laravel10_com_docker.git laravel-10
-cd laravel-10/
+# Substitua "nomedoseuprojeto" pelo nome desejado
+composer create-project --prefer-dist laravel/laravel nomedoseuprojeto
+cd nomedoseuprojeto
 </pre>
 
-3. Crie o Arquivo .env <br>
-Faça uma cópia do arquivo .env.example para criar o arquivo .env.
+
+Passo 2: Criar os arquivos Docker
+Dockerfile
+
 <pre>
-cp .env.example .env
+# Use a imagem oficial do PHP com FPM
+FROM php:7.4-fpm
+
+# Instale as dependências necessárias
+RUN apt-get update && \
+    apt-get install -y \
+        nginx \
+        git \
+        unzip \
+        libpq-dev \
+        libzip-dev \
+        && docker-php-ext-install pdo pdo_mysql pdo_pgsql zip
+
+# Configurar o servidor Nginx
+COPY nginx/default /etc/nginx/sites-available/default
+COPY nginx/nginx.conf /etc/nginx/nginx.conf
+
+# Configurar o ponto de entrada do Docker
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+ENTRYPOINT ["docker-entrypoint.sh"]
+
+# Definir o diretório de trabalho
+WORKDIR /var/www/html
+
+# Copiar o código do aplicativo para o contêiner
+COPY . /var/www/html
+
+# Instalar as dependências do Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+RUN composer install --no-scripts --no-autoloader && \
+    composer dump-autoload --optimize
+
+# Expor a porta 80
+EXPOSE 80
+
+# Comando de inicialização
+CMD ["php-fpm"]
 </pre>
 
-4. Atualize as Variáveis de Ambiente <br>
-Abra o arquivo .env e atualize as seguintes variáveis de ambiente:
+
+Arquivos Nginx
+nginx/default:
+
 <pre>
-APP_NAME="Laravel 10 com Docker"
-APP_URL=http://localhost
+server {
+    listen 80;
+    index index.php index.html;
+    server_name localhost;
+    root /var/www/html/public;
 
-DB_CONNECTION=mysql
-DB_HOST=mysql
-DB_PORT=3306
-DB_DATABASE=nome_desejado_db
-DB_USERNAME=nome_usuario
-DB_PASSWORD=senha_aqui
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
 
-CACHE_DRIVER=redis
-QUEUE_CONNECTION=redis
-SESSION_DRIVER=redis
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/var/run/php/php7.4-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
 
-REDIS_HOST=redis
-REDIS_PASSWORD=null
-REDIS_PORT=6379
+    location ~ /\.ht {
+        deny all;
+    }
+}
 </pre>
 
-4. Inicie os Containers do Projeto <br>
-Execute o seguinte comando para iniciar os containers do projeto:
+nginx/nginx.conf:
+
 <pre>
-docker-compose up -d
+user www-data;
+worker_processes auto;
+pid /run/nginx.pid;
+include /etc/nginx/modules-enabled/*.conf;
+
+events {
+    worker_connections 768;
+}
+
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log /var/log/nginx/access.log main;
+    error_log /var/log/nginx/error.log;
+
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+    types_hash_max_size 2048;
+
+    include /etc/nginx/conf.d/*.conf;
+    include /etc/nginx/sites-enabled/*;
+}
 </pre>
 
-5. Acesse o Container do Projeto <br>
-Acesse o container do projeto usando o seguinte comando:
+
+Passo 3: Configurar o Docker Compose
+docker-compose.yml
+
+<pre>
+version: '3'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: laravel10_app
+    container_name: laravel10_app
+    restart: unless-stopped
+    volumes:
+      - .:/var/www/html
+    networks:
+      - laravel10_network
+    depends_on:
+      - db
+  db:
+    image: mysql:5.7
+    container_name: laravel10_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: laravel10
+      MYSQL_USER: laravel10_user
+      MYSQL_PASSWORD: laravel10_password
+      MYSQL_ROOT_PASSWORD: root_password
+    networks:
+      - laravel10_network
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: laravel10_phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "8080:80"
+    networks:
+      - laravel10_network
+networks:
+  laravel10_network:
+    driver: bridge
+</pre>
+
+Passo 4: Criar o arquivo de entrada Docker
+docker-entrypoint.sh
+
+<pre>
+#!/bin/bash
+
+set -e
+
+# Configurar as permissões
+chmod -R 775 storage bootstrap/cache
+
+# Executar o comando de entrada padrão do Laravel
+exec "$@"
+</pre>
+
+Passo 5: Construir e Iniciar os Contêineres Docker
+No terminal, execute os seguintes comandos na raiz do seu projeto:
+
+<pre>
+docker-compose up -d --build
+</pre>
+
+Este comando irá construir as imagens Docker e iniciar os contêineres em segundo plano.
+
+Passo 6: Configurar o ambiente Laravel
+No terminal WSL, acesse o contêiner do aplicativo Laravel:
+
 <pre>
 docker-compose exec app bash
 </pre>
 
-6. Instale as Dependências do Projeto <br>
-Dentro do container, instale as dependências do projeto usando o Composer:
-<pre>
-composer install
-</pre>
+Dentro do contêiner, execute os seguintes comandos para configurar o ambiente Laravel:
 
-7. Gere a Chave do Projeto Laravel <br>
-Gere a chave do projeto Laravel com o seguinte comando:
 <pre>
+cp .env.example .env
 php artisan key:generate
+php artisan config:cache
+php artisan migrate
+exit
 </pre>
 
-8. Acesse o Projeto no Navegador <br>
-Abra seu navegador e acesse:
-<pre>
-http://localhost
-</pre>
+Passo 7: Acessar o Aplicativo Laravel
+Abra seu navegador e acesse http://localhost. Você deverá ver a página inicial do seu projeto Laravel.
+
+Passo 8: Acessar o PHPMyAdmin
+Abra seu navegador e acesse http://localhost:8080. Use as credenciais definidas no arquivo docker-compose.yml para fazer login no PHPMyAdmin.
+
+Agora você configurou com sucesso um ambiente Docker para o seu projeto Laravel 10, incluindo Nginx, PHPMyAdmin e MySQL, usando o Windows Subsystem for Linux (WSL). Certifique-se de adaptar as configurações de acordo com suas necessidades específicas.
