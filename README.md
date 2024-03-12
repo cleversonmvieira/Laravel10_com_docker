@@ -1,13 +1,21 @@
 <h2>Tutorial: Configuração do Projeto Laravel 10 com Docker e WSL</h2>
 
-Este tutorial fornece instruções detalhadas sobre como configurar um projeto Laravel 10 com Docker, incluindo Nginx, PHPMyAdmin e MySQL, utilizando o Windows Subsystem for Linux (WSL). <br>
+Este tutorial fornece instruções detalhadas sobre como configurar um projeto Laravel 10 com Docker, incluindo Nginx e MySQL, utilizando o Windows Subsystem for Linux (WSL). <br>
 
 <h4>Pré-requisitos</h4><br>
 1 - Docker e Docker Compose instalados no sistema.<br>
 2 - Windows Subsystem for Linux (WSL) instalado (versão 2 recomendada).<br>
 3 - Composer instalado no WSL.<br>
 
+
+Habilite o WSL no Windows 10
+'''
+dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+'''
+
 <h3>Passo 1: Criar um novo projeto Laravel</h3>
+
 
 
 <pre>
