@@ -37,6 +37,8 @@ swap=2GB
 
 <h3>Criando um projeto Laravel com Docker</h3>
 
+<h4>Modo 1</h4>
+
 1) Criar um novo projeto Laravel <br>
 
 ```sh
@@ -45,9 +47,31 @@ composer create-project --prefer-dist laravel/laravel nomedoseuprojeto
 cd nomedoseuprojeto
 ```
 
+2) Clonar os arquivos deste diretório (com o setup docker laravel) <br>
+
+```sh
+git clone https://github.com/cleversonmvieira/setup-docker-laravel.git
+cd /setup-docker-laravel
+```   
+
+3) Copiar os arquivos do setup-docker-laravel para a raiz do projeto Laravel criado:
+```sh
+cp docker /nomedoseuprojeto
+cp Dockerfile /nomedoseuprojeto
+cp docker-compose.yml /nomedoseuprojeto
+```
+
+<h4>Modo 2</h4>
+
+1) Criar um novo projeto Laravel <br>
+
+```sh
+# Substitua "nomedoseuprojeto" pelo nome desejado
+composer create-project --prefer-dist laravel/laravel nomedoseuprojeto
+cd nomedoseuprojeto
+```
 
 2) Criar os arquivos Docker <br>
-
 Crie um arquivo chamado "Dockerfile" na raiz do seu projeto Laravel com o seguinte conteúdo: <br>
 
 ```sh
@@ -96,8 +120,8 @@ USER $user
 ```
 
 
-3) Configurar o Docker Compose<br>
-Crie um arquivo chamado "docker-compose.yml" na raiz do seu projeto Laravel:
+3) Configurar o Docker Compose <br>
+Crie um arquivo chamado "docker-compose.yml" na raiz do seu projeto Laravel: <br>
 ```sh
 version: "3.7"
 
@@ -166,13 +190,11 @@ Este comando irá construir as imagens Docker e iniciar os contêineres em segun
 
 5) Configurar o ambiente Laravel <br>
 No terminal WSL, acesse o contêiner do aplicativo Laravel: <br>
-
 ```sh
 docker-compose exec app bash
 ```
 
 6) Dentro do contêiner, execute os seguintes comandos para configurar o ambiente Laravel: <br>
-
 ```sh
 cp .env.example .env
 php artisan key:generate
