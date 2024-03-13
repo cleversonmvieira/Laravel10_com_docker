@@ -196,6 +196,7 @@ docker-compose exec app bash
 
 6) Dentro do contêiner, execute os seguintes comandos para configurar o ambiente Laravel: <br>
 ```sh
+composer install
 cp .env.example .env
 php artisan key:generate
 php artisan config:cache
