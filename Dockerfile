@@ -1,42 +1,61 @@
-FROM php:8.1-fpm
+FROM php:8.2-fpm-alpine3.16
 
-# set your user name, ex: user=carlos
-ARG user=yourusername
-ARG uid=1000
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    unzip
-
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Install PHP extensions
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd sockets
-
-# Get latest Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# Create system user to run Composer and Artisan Commands
-RUN useradd -G www-data,root -u $uid -d /home/$user $user
-RUN mkdir -p /home/$user/.composer && \
-    chown -R $user:$user /home/$user
-
-# Install redis
-RUN pecl install -o -f redis \
-    &&  rm -rf /tmp/pear \
-    &&  docker-php-ext-enable redis
-
-# Set working directory
 WORKDIR /var/www
 
-# Copy custom configurations PHP
-COPY docker/php/custom.ini /usr/local/etc/php/conf.d/custom.ini
+ENV TZ=America/Sao_Paulo
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-USER $user
+RUN apk update && apk add --no-cache bash \
+    autoconf \
+    build-base \
+    shadow \
+    curl \
+    zlib-dev \
+    zip \
+    libzip-dev \
+    bzip2 \
+    bzip2-dev \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    freetds-dev \
+    unixodbc-dev \
+    php8 \
+    php8-common \
+    php8-fpm \
+    php8-pdo \
+    php8-opcache \
+    php8-zip \
+    php8-phar \
+    php8-iconv \
+    php8-cli \
+    php8-curl \
+    php8-openssl \
+    php8-mbstring \
+    php8-tokenizer \
+    php8-fileinfo \
+    php8-json \
+    php8-xml \
+    php8-xmlwriter \
+    php8-simplexml \
+    php8-dom \
+    php8-pdo_mysql \
+    php8-pdo_sqlite \
+    php8-tokenizer \
+    php8-pecl-redis \
+    supervisor \
+    tzdata
+
+RUN docker-php-ext-configure pdo \
+    && pecl install zip redis \
+    && docker-php-ext-enable redis \
+    && docker-php-ext-install pdo_mysql \
+    && docker-php-ext-configure zip \
+    && docker-php-ext-install zip bz2
+
+RUN rm -rf /var/cache/apk/*
+
+COPY config/pool.conf /usr/local/etc/php-fpm.d/pool.conf
+
+EXPOSE 9000
+
+CMD [ "php-fpm"]
