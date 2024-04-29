@@ -1,13 +1,14 @@
 version: "3.7"
 
 services:
-    # image project
-    app:
+  # image project
+  app:
     image: "myapp:latest"
     build:
       context: .
     depends_on:
-      - db
+      - db_mysql
+      - db_postgres
     volumes:
       - ./site:/www
     restart: unless-stopped
@@ -16,46 +17,65 @@ services:
     networks:
       - default
 
-# database mysql
-    db:
+  # database mysql
+  db_mysql:
     image: 'mysql/mysql-server:8.0'
     ports:
-        - '${FORWARD_DB_PORT:-3310}:3310'
+      - '${FORWARD_DB_PORT_MYSQL:-3310}:3310'
     environment:
-        MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
-        MYSQL_ROOT_HOST: '%'
-        MYSQL_DATABASE: '${DB_DATABASE}'
-        MYSQL_USER: '${DB_USERNAME}'
-        MYSQL_PASSWORD: '${DB_PASSWORD}'
-        MYSQL_ALLOW_EMPTY_PASSWORD: 1
-        MYSQL_TCP_PORT: 3310
+      MYSQL_ROOT_PASSWORD: '${DB_PASSWORD_MYSQL}'
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_DATABASE: '${DB_DATABASE_MYSQL}'
+      MYSQL_USER: '${DB_USERNAME_MYSQL}'
+      MYSQL_PASSWORD: '${DB_PASSWORD_MYSQL}'
+      MYSQL_ALLOW_EMPTY_PASSWORD: 1
+      MYSQL_TCP_PORT: 3310
     volumes:
-        - 'db:/var/lib/mysql'
+      - 'db_mysql:/var/lib/mysql'
     networks:
-        - default
+      - default
     healthcheck:
-        test:
-            - CMD
-            - mysqladmin
-            - ping
-            - '-p${DB_PASSWORD}'
-        retries: 3
-        timeout: 5s
+      test:
+        - CMD
+        - mysqladmin
+        - ping
+        - '-p${DB_PASSWORD_MYSQL}'
+      retries: 3
+      timeout: 5s
 
- # servidor web nginx       
+  # database postgresql
+  db_postgres:
+    image: 'postgres:latest'
+    ports:
+      - '${FORWARD_DB_PORT_POSTGRES:-5432}:5432'
+    environment:
+      POSTGRES_USER: '${DB_USERNAME_POSTGRES}'
+      POSTGRES_PASSWORD: '${DB_PASSWORD_POSTGRES}'
+      POSTGRES_DB: '${DB_DATABASE_POSTGRES}'
+    volumes:
+      - 'db_postgres:/var/lib/postgresql/data'
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME_POSTGRES}"]
+      retries: 3
+      timeout: 5s
+
+  # servidor web nginx
   web:
     image: nginx:latest
     restart: always
     ports:
-    - "80:80"
+      - "80:80"
     volumes:
-    - ./site:/www
-    - ./config/default.conf:/etc/nginx/conf.d/default.conf
+      - ./site:/www
+      - ./config/default.conf:/etc/nginx/conf.d/default.conf
     links:
-    - app
+      - app
 
 volumes:
-  db:
+  db_mysql:
+  db_postgres:
 
 networks:
   default:
