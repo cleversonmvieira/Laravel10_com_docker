@@ -54,7 +54,7 @@ RUN docker-php-ext-configure pdo \
 
 RUN rm -rf /var/cache/apk/*
 
-COPY config/pool.conf /usr/local/etc/php-fpm.d/pool.conf
+#COPY config/pool.conf /usr/local/etc/php-fpm.d/pool.conf
 
 EXPOSE 9000
 
