@@ -15,11 +15,8 @@ project-root/
 │
 ├── docker-compose.yml
 ├── Dockerfile
-├── .env
-├── laravel/
-│   └── (código do Laravel será instalado aqui)
-└── phpmyadmin/
-    └── Dockerfile (opcional para customização do phpMyAdmin)
+└── laravel/
+    └── (código do Laravel será instalado aqui)
 ```
 
 ## Passo 1: Criar o arquivo docker-compose.yml
