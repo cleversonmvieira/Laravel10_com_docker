@@ -125,11 +125,11 @@ RUN a2enmod rewrite
 
 Explicações:
 
-php:8.3-apache: Imagem base com PHP 8.3 e Apache pré-instalados.
-RUN apt-get update ...: Instala as bibliotecas necessárias, como libzip (para ZIP), pdo_mysql (para MySQL) e Git.
-COPY --from=composer:2: Copia o Composer diretamente da imagem oficial do Composer, facilitando a instalação de dependências do Laravel.
-WORKDIR: Define o diretório /var/www/html como o local de trabalho no container.
-a2enmod rewrite: Habilita o módulo mod_rewrite do Apache, necessário para o Laravel funcionar corretamente.
+- `php:8.3-apache`: Imagem base com PHP 8.3 e Apache pré-instalados.
+- `RUN apt-get update ...`: Instala as bibliotecas necessárias, como libzip (para ZIP), pdo_mysql (para MySQL) e Git.
+- `COPY --from=composer:2`: Copia o Composer diretamente da imagem oficial do Composer, facilitando a instalação de dependências do Laravel.
+- `WORKDIR`: Define o diretório /var/www/html como o local de trabalho no container.
+- `a2enmod rewrite`: Habilita o módulo mod_rewrite do Apache, necessário para o Laravel funcionar corretamente.
 
 ## Passo 3: Instalar o Laravel
 Agora que o ambiente Docker está configurado, você precisa instalar o Laravel no diretório laravel dentro do projeto.
@@ -153,11 +153,11 @@ exit
 
 Explicações:
 
-O comando docker-compose up -d inicia os serviços em segundo plano.
-O composer create-project instala o Laravel na versão mais recente dentro do diretório /var/www/html, que está mapeado para o diretório ./laravel no seu sistema local.
+- O comando `docker-compose up -d` inicia os serviços em segundo plano.
+- O `composer create-project` instala o Laravel na versão mais recente dentro do diretório `/var/www/html`, que está mapeado para o diretório `./laravel` no seu sistema local.
 
 ## Passo 4: Configurar o arquivo .env do Laravel
-Após instalar o Laravel (veja o Passo 4), você precisa configurar o arquivo .env para conectar ao banco de dados MySQL.
+Após instalar o Laravel (veja o Passo 3), você precisa configurar o arquivo .env para conectar ao banco de dados MySQL.
 
 Abra o arquivo .env dentro do diretório Laravel (será gerado no próximo passo).
 Modifique as seguintes linhas para ajustar as credenciais do MySQL:
@@ -170,3 +170,30 @@ DB_DATABASE=laravel_db
 DB_USERNAME=laravel_user
 DB_PASSWORD=laravel_password
 ```
+
+Explicações:
+
+- `DB_CONNECTION`: Define o tipo de banco de dados (MySQL neste caso).
+- `DB_HOST`: O nome do serviço MySQL, que no Docker é simplesmente mysql (conforme definido no docker-compose.yml).
+- `DB_PORT`: A porta padrão do MySQL.
+- `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`: Correspondem às variáveis configuradas no serviço MySQL no docker-compose.yml.
+
+
+Passo 5: Acessar o Laravel e phpMyAdmin
+Com todos os containers rodando e o Laravel instalado, agora você pode acessar a aplicação e o phpMyAdmin.
+
+- Laravel:
+-- Acesse http://localhost:8000 no navegador.
+- phpMyAdmin:
+-- Acesse http://localhost:8080 para gerenciar o banco de dados.
+
+Credenciais do phpMyAdmin:
+
+- Servidor: mysql
+- Usuário: laravel_user
+- Senha: laravel_password
+
+Explicações:
+
+O Laravel estará disponível na porta 8000, conforme mapeado no `docker-compose.yml`.
+O phpMyAdmin estará disponível na porta 8080, permitindo o gerenciamento visual do banco de dados MySQL.
