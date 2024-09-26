@@ -20,9 +20,9 @@ project-root/
 │   └── (código do Laravel será instalado aqui)
 └── phpmyadmin/
     └── Dockerfile (opcional para customização do phpMyAdmin)
+```
 
-
-Passo 1: Criar o arquivo docker-compose.yml
+## Passo 1: Criar o arquivo docker-compose.yml
 O arquivo docker-compose.yml define os serviços Docker que serão utilizados no projeto. No caso, iremos configurar três containers: um para o aplicativo Laravel, um para o banco de dados MySQL e um para o phpMyAdmin (interface gráfica para o MySQL).
 
 Crie o arquivo docker-compose.yml na raiz do seu projeto.
