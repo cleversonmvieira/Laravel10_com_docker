@@ -90,11 +90,11 @@ networks:
 
 Explicações:
 
-app: Define o container do Laravel, mapeando a porta 8000 do host para a porta 80 no container (onde o Apache servirá a aplicação).
-mysql: Define o container do banco de dados MySQL, expondo a porta 3306 para conexão externa e configurando variáveis de ambiente com as credenciais do banco.
-phpmyadmin: Configura o phpMyAdmin para gerenciar o MySQL via interface web, disponível na porta 8080.
-volumes: Define volumes persistentes para que os dados do MySQL não sejam perdidos ao reiniciar os containers.
-networks: Cria uma rede Docker onde todos os serviços podem se comunicar entre si.
+- `app`: Define o container do Laravel, mapeando a porta 8000 do host para a porta 80 no container (onde o Apache servirá a aplicação).
+- `mysql`: Define o container do banco de dados MySQL, expondo a porta 3306 para conexão externa e configurando variáveis de ambiente com as credenciais do banco.
+- `phpmyadmin`: Configura o phpMyAdmin para gerenciar o MySQL via interface web, disponível na porta 8080.
+- `volumes`: Define volumes persistentes para que os dados do MySQL não sejam perdidos ao reiniciar os containers.
+- `networks`: Cria uma rede Docker onde todos os serviços podem se comunicar entre si.
 
 
 ## Passo 2: Criar o arquivo Dockerfile para PHP e Laravel
