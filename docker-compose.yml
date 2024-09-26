@@ -1,81 +1,55 @@
-version: "3.7"
+version: '3.8' # Define a versão do docker-compose a ser utilizada
 
 services:
-  # image project
+  # Serviço do PHP com Laravel
   app:
-    image: "myapp:latest"
     build:
       context: .
+      dockerfile: Dockerfile
+    container_name: laravel_app
+    volumes:
+      - ./laravel:/var/www/html  # Mapeia o diretório local para o container
+    ports:
+      - "8000:80"  # Porta exposta para acessar o Laravel localmente
+    networks:
+      - laravel_network
     depends_on:
-      - db_mysql
-      - db_postgres
-    volumes:
-      - ./site:/www
-    restart: unless-stopped
-    expose:
-      - 9000
-    networks:
-      - default
+      - mysql
 
-  # database mysql
-  db_mysql:
-    image: 'mysql/mysql-server:8.0'
-    ports:
-      - '${FORWARD_DB_PORT_MYSQL:-3310}:3310'
+  # Serviço do MySQL
+  mysql:
+    image: mysql:8.0 # Usando a imagem oficial do MySQL
+    container_name: laravel_mysql
     environment:
-      MYSQL_ROOT_PASSWORD: '${DB_PASSWORD_MYSQL}'
-      MYSQL_ROOT_HOST: '%'
-      MYSQL_DATABASE: '${DB_DATABASE_MYSQL}'
-      MYSQL_USER: '${DB_USERNAME_MYSQL}'
-      MYSQL_PASSWORD: '${DB_PASSWORD_MYSQL}'
-      MYSQL_ALLOW_EMPTY_PASSWORD: 1
-      MYSQL_TCP_PORT: 3310
+      MYSQL_ROOT_PASSWORD: rootpassword  # Define a senha do root do MySQL
+      MYSQL_DATABASE: laravel_db         # Cria um banco de dados ao iniciar o container
+      MYSQL_USER: laravel_user           # Define o usuário do MySQL
+      MYSQL_PASSWORD: laravel_password   # Define a senha do usuário
     volumes:
-      - 'db_mysql:/var/lib/mysql'
-    networks:
-      - default
-    healthcheck:
-      test:
-        - CMD
-        - mysqladmin
-        - ping
-        - '-p${DB_PASSWORD_MYSQL}'
-      retries: 3
-      timeout: 5s
-
-  # database postgresql
-  db_postgres:
-    image: 'postgres:latest'
+      - mysql_data:/var/lib/mysql  # Volume persistente para os dados do MySQL
     ports:
-      - '${FORWARD_DB_PORT_POSTGRES:-5432}:5432'
+      - "3306:3306"  # Porta exposta para acesso ao MySQL
+    networks:
+      - laravel_network
+
+  # Serviço do phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin # Usando a imagem oficial do phpMyAdmin
+    container_name: laravel_phpmyadmin
     environment:
-      POSTGRES_USER: '${DB_USERNAME_POSTGRES}'
-      POSTGRES_PASSWORD: '${DB_PASSWORD_POSTGRES}'
-      POSTGRES_DB: '${DB_DATABASE_POSTGRES}'
-    volumes:
-      - 'db_postgres:/var/lib/postgresql/data'
-    networks:
-      - default
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME_POSTGRES}"]
-      retries: 3
-      timeout: 5s
-
-  # servidor web nginx
-  web:
-    image: nginx:latest
-    restart: always
+      PMA_HOST: mysql # Conecta ao serviço MySQL pelo nome do container
+      MYSQL_ROOT_PASSWORD: rootpassword
     ports:
-      - "80:80"
-    volumes:
-      - ./site:/www
-      - ./config/default.conf:/etc/nginx/conf.d/default.conf
-    links:
-      - app
+      - "8080:80"  # Porta exposta para acessar o phpMyAdmin
+    depends_on:
+      - mysql
+    networks:
+      - laravel_network
 
+# Definindo volumes persistentes
 volumes:
-  db_mysql:
-  db_postgres:
+  mysql_data:
 
+# Definindo uma rede personalizada para os containers
 networks:
-  default:
+  laravel_network:
