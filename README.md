@@ -179,13 +179,11 @@ Explicações:
 - `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`: Correspondem às variáveis configuradas no serviço MySQL no docker-compose.yml.
 
 
-Passo 5: Acessar o Laravel e phpMyAdmin
+## Passo 5: Acessar o Laravel e phpMyAdmin
 Com todos os containers rodando e o Laravel instalado, agora você pode acessar a aplicação e o phpMyAdmin.
 
-- Laravel:
--- Acesse http://localhost:8000 no navegador.
-- phpMyAdmin:
--- Acesse http://localhost:8080 para gerenciar o banco de dados.
+- Laravel: Acesse http://localhost:8000 no navegador.
+- phpMyAdmin: Acesse http://localhost:8080 para gerenciar o banco de dados.
 
 Credenciais do phpMyAdmin:
 
@@ -195,5 +193,5 @@ Credenciais do phpMyAdmin:
 
 Explicações:
 
-O Laravel estará disponível na porta 8000, conforme mapeado no `docker-compose.yml`.
-O phpMyAdmin estará disponível na porta 8080, permitindo o gerenciamento visual do banco de dados MySQL.
+- O Laravel estará disponível na porta 8000, conforme mapeado no `docker-compose.yml`.
+- O phpMyAdmin estará disponível na porta 8080, permitindo o gerenciamento visual do banco de dados MySQL.
