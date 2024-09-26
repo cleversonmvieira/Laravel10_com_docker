@@ -27,6 +27,9 @@ O arquivo docker-compose.yml define os serviços Docker que serão utilizados no
 
 Crie o arquivo docker-compose.yml na raiz do seu projeto.
 Adicione o seguinte conteúdo:
+
+```yaml
+
 version: '3.8' # Define a versão do docker-compose a ser utilizada
 
 services:
@@ -82,6 +85,8 @@ volumes:
 # Definindo uma rede personalizada para os containers
 networks:
   laravel_network:
+
+```
 
 Explicações:
 
