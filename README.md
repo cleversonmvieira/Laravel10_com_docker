@@ -122,3 +122,26 @@ WORKDIR /var/www/html
 # Habilitando mod_rewrite no Apache para que o Laravel funcione corretamente
 RUN a2enmod rewrite
 ```
+
+Explicações:
+
+php:8.3-apache: Imagem base com PHP 8.3 e Apache pré-instalados.
+RUN apt-get update ...: Instala as bibliotecas necessárias, como libzip (para ZIP), pdo_mysql (para MySQL) e Git.
+COPY --from=composer:2: Copia o Composer diretamente da imagem oficial do Composer, facilitando a instalação de dependências do Laravel.
+WORKDIR: Define o diretório /var/www/html como o local de trabalho no container.
+a2enmod rewrite: Habilita o módulo mod_rewrite do Apache, necessário para o Laravel funcionar corretamente.
+
+## Passo 3: Configurar o arquivo .env do Laravel
+Após instalar o Laravel (veja o Passo 4), você precisa configurar o arquivo .env para conectar ao banco de dados MySQL.
+
+Abra o arquivo .env dentro do diretório Laravel (será gerado no próximo passo).
+Modifique as seguintes linhas para ajustar as credenciais do MySQL:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=laravel_db
+DB_USERNAME=laravel_user
+DB_PASSWORD=laravel_password
+```
