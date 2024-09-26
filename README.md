@@ -95,3 +95,30 @@ mysql: Define o container do banco de dados MySQL, expondo a porta 3306 para con
 phpmyadmin: Configura o phpMyAdmin para gerenciar o MySQL via interface web, disponível na porta 8080.
 volumes: Define volumes persistentes para que os dados do MySQL não sejam perdidos ao reiniciar os containers.
 networks: Cria uma rede Docker onde todos os serviços podem se comunicar entre si.
+
+
+## Passo 2: Criar o arquivo Dockerfile para PHP e Laravel
+O Dockerfile define a configuração do ambiente PHP 8.3 que será usado para rodar o Laravel.
+
+Crie um arquivo chamado Dockerfile na raiz do projeto.
+Adicione o seguinte conteúdo:
+```php
+# Usando a imagem base oficial do PHP 8.3 com Apache
+FROM php:8.3-apache
+
+# Instalando extensões necessárias para o Laravel
+RUN apt-get update && apt-get install -y \
+    libzip-dev \
+    unzip \
+    git \
+    && docker-php-ext-install zip pdo pdo_mysql
+
+# Instalando Composer globalmente
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Configurando o diretório de trabalho
+WORKDIR /var/www/html
+
+# Habilitando mod_rewrite no Apache para que o Laravel funcione corretamente
+RUN a2enmod rewrite
+```
