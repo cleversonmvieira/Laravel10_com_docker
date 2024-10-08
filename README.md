@@ -13,6 +13,7 @@ Este repositório contém um exemplo de configuração de um ambiente de desenvo
 ```plaintext
 project-root/
 │
+├── apache-laravel.conf
 ├── docker-compose.yml
 ├── Dockerfile
 └── laravel/
@@ -27,61 +28,86 @@ Adicione o seguinte conteúdo:
 
 ```yaml
 
-version: '3.8' # Define a versão do docker-compose a ser utilizada
+# Define a versão do Docker Compose que está sendo usada
+# A versão 3.8 é uma das versões mais recentes e estável
+# que traz compatibilidade com várias funcionalidades.
+#version: '3.8'
 
 services:
-  # Serviço do PHP com Laravel
+  # Definição do serviço 'app', que representa a aplicação Laravel
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: laravel_app
-    volumes:
-      - ./laravel:/var/www/html  # Mapeia o diretório local para o container
+    # A aplicação será construída com base no Dockerfile localizado na raiz do projeto (indicado pelo '.')
+    build: .
+    
+    # Mapeamento de portas do contêiner para o host
+    # A porta 8000 no host será mapeada para a porta 80 do contêiner, permitindo acessar o app via http://localhost:8000
     ports:
-      - "8000:80"  # Porta exposta para acessar o Laravel localmente
+      - "8000:80"
+    
+    # Volume compartilhado entre o host e o contêiner
+    # A pasta local 'laravel' será mapeada para '/var/www/html' dentro do contêiner
+    # Isso permite que alterações no código no host sejam refletidas instantaneamente no contêiner
+    volumes:
+      - ./laravel:/var/www/html
+    
+    # Conectando o serviço 'app' à rede interna 'app-network', para se comunicar com outros serviços
     networks:
-      - laravel_network
-    depends_on:
-      - mysql
+      - app-network
 
-  # Serviço do MySQL
-  mysql:
-    image: mysql:8.0 # Usando a imagem oficial do MySQL
-    container_name: laravel_mysql
+  # Definição do serviço 'db', que representa o banco de dados MySQL
+  db:
+    # A imagem do MySQL será baixada automaticamente com base na última versão disponível ('mysql:latest')
+    image: mysql:latest
+    
+    # Configuração de variáveis de ambiente para o contêiner MySQL
+    # Estes valores são usados para criar o banco de dados e configurar o acesso
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword  # Define a senha do root do MySQL
-      MYSQL_DATABASE: laravel_db         # Cria um banco de dados ao iniciar o container
-      MYSQL_USER: laravel_user           # Define o usuário do MySQL
-      MYSQL_PASSWORD: laravel_password   # Define a senha do usuário
-    volumes:
-      - mysql_data:/var/lib/mysql  # Volume persistente para os dados do MySQL
+      # Senha do usuário root do MySQL
+      MYSQL_ROOT_PASSWORD: root_password
+      # Nome do banco de dados a ser criado automaticamente
+      MYSQL_DATABASE: laravel
+      # Nome de usuário a ser criado automaticamente para o banco
+      MYSQL_USER: user_laravel
+      # Senha do usuário que será criado para o banco
+      MYSQL_PASSWORD: password_laravel
+    
+    # Mapeamento da porta 3306 do contêiner (porta padrão do MySQL) para a mesma porta no host
+    # Permite que você se conecte ao MySQL no contêiner via localhost:3306
     ports:
-      - "3306:3306"  # Porta exposta para acesso ao MySQL
+      - "3306:3306"
+    
+    # Conectando o serviço 'db' à rede interna 'app-network', para que a aplicação possa se comunicar com o banco de dados
     networks:
-      - laravel_network
+      - app-network
 
-  # Serviço do phpMyAdmin
+  # Definição do serviço 'phpmyadmin', que fornece uma interface gráfica para gerenciar o banco de dados MySQL
   phpmyadmin:
-    image: phpmyadmin/phpmyadmin # Usando a imagem oficial do phpMyAdmin
-    container_name: laravel_phpmyadmin
+    # A imagem do PhpMyAdmin será baixada automaticamente
+    image: phpmyadmin/phpmyadmin
+    
+    # Configuração das variáveis de ambiente para o PhpMyAdmin
     environment:
-      PMA_HOST: mysql # Conecta ao serviço MySQL pelo nome do container
-      MYSQL_ROOT_PASSWORD: rootpassword
+      # Nome do host (serviço) onde o MySQL está rodando. Neste caso, o serviço 'db' dentro da rede do Docker.
+      PMA_HOST: db
+      # Nome de usuário do banco de dados que o PhpMyAdmin usará para se conectar (mesmo usuário criado para o MySQL)
+      PMA_USER: user_laravel
+      # Senha do usuário para acessar o banco de dados
+      PMA_PASSWORD: password_laravel
+    
+    # Mapeamento da porta 8080 no host para a porta 80 do contêiner, permitindo acessar o PhpMyAdmin via http://localhost:8080
     ports:
-      - "8080:80"  # Porta exposta para acessar o phpMyAdmin
-    depends_on:
-      - mysql
+      - "8080:80"
+    
+    # Conectando o serviço 'phpmyadmin' à rede interna 'app-network', para que ele possa se comunicar com o banco de dados MySQL
     networks:
-      - laravel_network
+      - app-network
 
-# Definindo volumes persistentes
-volumes:
-  mysql_data:
-
-# Definindo uma rede personalizada para os containers
+# Definição da rede interna 'app-network' usada para comunicação entre os contêineres
 networks:
-  laravel_network:
+  app-network:
+    # Usando o driver 'bridge', que cria uma rede isolada para permitir a comunicação entre os serviços Docker
+    driver: bridge
+
 
 ```
 
@@ -100,24 +126,56 @@ O Dockerfile define a configuração do ambiente PHP 8.3 que será usado para ro
 Crie um arquivo chamado Dockerfile na raiz do projeto.
 Adicione o seguinte conteúdo:
 ```php
-# Usando a imagem base oficial do PHP 8.3 com Apache
+# Usar a imagem oficial do PHP 8.3 com Apache
+# A imagem já inclui Apache e PHP, garantindo um ambiente pronto para rodar aplicações web
 FROM php:8.3-apache
 
-# Instalando extensões necessárias para o Laravel
-RUN apt-get update && apt-get install -y \
-    libzip-dev \
-    unzip \
-    git \
-    && docker-php-ext-install zip pdo pdo_mysql
+# Instalar extensões necessárias para o Laravel, como suporte a PDO e MySQL
+# Isso é importante para que o Laravel possa se conectar ao banco de dados
+RUN docker-php-ext-install pdo pdo_mysql
 
-# Instalando Composer globalmente
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
-# Configurando o diretório de trabalho
-WORKDIR /var/www/html
-
-# Habilitando mod_rewrite no Apache para que o Laravel funcione corretamente
+# Habilitar o mod_rewrite do Apache, que é necessário para a manipulação de URLs amigáveis no Laravel
 RUN a2enmod rewrite
+
+# Configurar variáveis de ambiente para limitar a exposição de erros em produção
+# Isso ajuda a evitar que informações sensíveis sejam exibidas caso ocorram erros
+ENV APP_ENV=production
+ENV APP_DEBUG=false
+ENV APP_LOG_LEVEL=warning
+
+# Configurar o limite de upload para evitar ataques de negação de serviço (DOS) via arquivos grandes
+# Ajuste conforme a necessidade da sua aplicação
+RUN echo "upload_max_filesize=10M" > /usr/local/etc/php/conf.d/uploads.ini && \
+    echo "post_max_size=12M" >> /usr/local/etc/php/conf.d/uploads.ini
+
+# Desabilitar listagem de diretórios no Apache, o que melhora a segurança ao impedir o acesso direto a arquivos
+RUN echo "Options -Indexes" >> /etc/apache2/apache2.conf
+
+# Copiar os arquivos da aplicação para o diretório padrão do Apache
+# As permissões são importantes para garantir que o servidor web possa ler os arquivos corretamente
+COPY app/ /var/www/html/
+
+# Definir as permissões corretas para o diretório da aplicação
+# O usuário e grupo 'www-data' são padrões do Apache e devem ter propriedade dos arquivos da aplicação
+RUN chown -R www-data:www-data /var/www/html
+
+# Ajustar permissões de segurança adicionais:
+# Conceder permissões de leitura (644) para arquivos e de execução (755) para diretórios
+# Isso limita as permissões para evitar acesso indevido a arquivos sensíveis
+RUN find /var/www/html -type f -exec chmod 644 {} \; && \
+    find /var/www/html -type d -exec chmod 755 {} \;
+
+# Proteger arquivos sensíveis no Laravel, como .env, para evitar que sejam acessados diretamente pelo navegador
+RUN echo "<FilesMatch \"^\.env$\">\n    Require all denied\n</FilesMatch>" >> /etc/apache2/apache2.conf
+
+# Copiar o arquivo de configuração personalizada do Apache para configurar o DocumentRoot e outras diretivas do Apache
+COPY ./apache-laravel.conf /etc/apache2/sites-available/000-default.conf
+
+# Ativar cabeçalhos de segurança no Apache para mitigar ataques comuns, como XSS e clickjacking
+RUN echo "Header set X-Content-Type-Options: nosniff" >> /etc/apache2/apache2.conf && \
+    echo "Header always append X-Frame-Options SAMEORIGIN" >> /etc/apache2/apache2.conf && \
+    echo "Header set X-XSS-Protection \"1; mode=block\"" >> /etc/apache2/apache2.conf
+
 ```
 
 Explicações:
@@ -161,11 +219,11 @@ Modifique as seguintes linhas para ajustar as credenciais do MySQL:
 
 ```env
 DB_CONNECTION=mysql
-DB_HOST=mysql
+DB_HOST=db
 DB_PORT=3306
-DB_DATABASE=laravel_db
-DB_USERNAME=laravel_user
-DB_PASSWORD=laravel_password
+DB_DATABASE=laravel
+DB_USERNAME=user_laravel
+DB_PASSWORD=password_laravel
 ```
 
 Explicações:
