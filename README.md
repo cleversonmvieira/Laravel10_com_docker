@@ -187,29 +187,22 @@ Explicações:
 - `a2enmod rewrite`: Habilita o módulo mod_rewrite do Apache, necessário para o Laravel funcionar corretamente.
 
 ## Passo 3: Instalar o Laravel
-Agora que o ambiente Docker está configurado, você precisa instalar o Laravel no diretório laravel dentro do projeto.
+Agora que o ambiente Docker está configurado, você precisa instalar o Laravel no diretório `laravel` dentro do projeto.
+
+Instale o Laravel utilizando o Composer:
+```bash
+composer create-project --prefer-dist laravel/laravel laravel
+```
 
 Inicie os containers com o Docker Compose:
 ```bash
 docker-compose up -d
 ```
-Entre no container app:
-```bash
-docker-compose exec app bash
-```
-Dentro do container, instale o Laravel utilizando o Composer:
-```bash
-composer create-project --prefer-dist laravel/laravel nomedoprojeto
-```
-Saia do container:
-```bash
-exit
-```
 
 Explicações:
 
-- O comando `docker-compose up -d` inicia os serviços em segundo plano.
 - O `composer create-project` instala o Laravel na versão mais recente dentro do diretório `/var/www/html`, que está mapeado para o diretório `./laravel` no seu sistema local.
+- - O comando `docker-compose up -d` inicia os serviços em segundo plano.
 
 ## Passo 4: Configurar o arquivo .env do Laravel
 Após instalar o Laravel (veja o Passo 3), você precisa configurar o arquivo .env para conectar ao banco de dados MySQL.
