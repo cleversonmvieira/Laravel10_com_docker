@@ -25,7 +25,7 @@ RUN echo "Options -Indexes" >> /etc/apache2/apache2.conf
 
 # Copiar os arquivos da aplicação para o diretório padrão do Apache
 # As permissões são importantes para garantir que o servidor web possa ler os arquivos corretamente
-COPY app/ /var/www/html/
+COPY laravel/ /var/www/html/
 
 # Definir as permissões corretas para o diretório da aplicação
 # O usuário e grupo 'www-data' são padrões do Apache e devem ter propriedade dos arquivos da aplicação
