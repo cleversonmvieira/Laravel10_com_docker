@@ -207,6 +207,7 @@ php artisan migrate
 
 Inicie os containers com o Docker Compose:
 ```bash
+cd ..
 docker-compose up -d
 ```
 
