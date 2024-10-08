@@ -15,10 +15,10 @@ services:
       - "8000:80"
     
     # Volume compartilhado entre o host e o contêiner
-    # A pasta local 'app' será mapeada para '/var/www/html' dentro do contêiner
+    # A pasta local 'laravel' será mapeada para '/var/www/html' dentro do contêiner
     # Isso permite que alterações no código no host sejam refletidas instantaneamente no contêiner
     volumes:
-      - ./app:/var/www/html
+      - ./laravel:/var/www/html
     
     # Conectando o serviço 'app' à rede interna 'app-network', para se comunicar com outros serviços
     networks:
