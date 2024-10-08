@@ -194,6 +194,17 @@ Instale o Laravel utilizando o Composer:
 composer create-project --prefer-dist laravel/laravel laravel
 ```
 
+Entre no diretório do laravel e crie a chave
+```bash
+cd laravel
+php artisan key:generate
+```
+
+Rode as migrates para criar as tabelas do banco de dados
+```bash
+php artisan migrate
+```
+
 Inicie os containers com o Docker Compose:
 ```bash
 docker-compose up -d
