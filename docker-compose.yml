@@ -1,79 +1,100 @@
-# Define a versão do Docker Compose que está sendo usada
-# A versão 3.8 é uma das versões mais recentes e estável
-# que traz compatibilidade com várias funcionalidades.
-#version: '3.8'
+# Define a versão do Docker Compose
+# A versão 3.8 é amplamente utilizada e estável, oferecendo suporte a diversas funcionalidades recentes.
+version: '3.8'
 
 services:
   # Definição do serviço 'app', que representa a aplicação Laravel
   app:
-    # A aplicação será construída com base no Dockerfile localizado na raiz do projeto (indicado pelo '.')
+    # A aplicação será construída com base no Dockerfile localizado na raiz do projeto ('.' indica o diretório atual)
     build: .
-    
+
     # Mapeamento de portas do contêiner para o host
-    # A porta 8000 no host será mapeada para a porta 80 do contêiner, permitindo acessar o app via http://localhost:8000
+    # A porta 8000 no host será mapeada para a porta 80 do contêiner,
+    # permitindo o acesso à aplicação via http://localhost:8000
     ports:
       - "8000:80"
-    
-    # Volume compartilhado entre o host e o contêiner
-    # A pasta local 'laravel' será mapeada para '/var/www/html' dentro do contêiner
-    # Isso permite que alterações no código no host sejam refletidas instantaneamente no contêiner
+
+    # 'depends_on' garante que o serviço 'db' seja iniciado antes da aplicação.
+    depends_on:
+      - db
+
+    # Definindo variáveis de ambiente para configurar a conexão com o banco de dados.
+    environment:
+      - DB_HOST=db                    # Serviço 'db' que será o host do banco de dados.
+      - DB_DATABASE=laravel            # Nome do banco de dados usado pela aplicação Laravel.
+      - DB_USERNAME=user_laravel       # Usuário do banco de dados.
+      - DB_PASSWORD=password_laravel   # Senha do usuário do banco.
+
+    # Volume compartilhado entre o host e o contêiner.
+    # Mapeia o diretório local 'laravel' para '/var/www/html' dentro do contêiner,
+    # permitindo que alterações no código no host sejam refletidas no contêiner em tempo real.
     volumes:
       - ./laravel:/var/www/html
-    
-    # Conectando o serviço 'app' à rede interna 'app-network', para se comunicar com outros serviços
+
+    # Conectando o serviço 'app' à rede 'app-network' para comunicação interna entre os serviços.
     networks:
       - app-network
 
   # Definição do serviço 'db', que representa o banco de dados MySQL
   db:
-    # A imagem do MySQL será baixada automaticamente com base na última versão disponível ('mysql:latest')
-    image: mysql:latest
-    
-    # Configuração de variáveis de ambiente para o contêiner MySQL
-    # Estes valores são usados para criar o banco de dados e configurar o acesso
+    # Usando a imagem 'mysql:8.0', uma versão específica e estável do MySQL para garantir consistência.
+    image: mysql:8.0
+
+    # Variáveis de ambiente para configurar o MySQL
     environment:
-      # Senha do usuário root do MySQL
+      # Senha do usuário root do MySQL (necessária para administrar o banco).
       MYSQL_ROOT_PASSWORD: root_password
-      # Nome do banco de dados a ser criado automaticamente
+      # Nome do banco de dados a ser criado automaticamente no contêiner.
       MYSQL_DATABASE: laravel
-      # Nome de usuário a ser criado automaticamente para o banco
+      # Nome de usuário que será criado para acessar o banco de dados.
       MYSQL_USER: user_laravel
-      # Senha do usuário que será criado para o banco
+      # Senha do usuário que será criado para o banco de dados.
       MYSQL_PASSWORD: password_laravel
-    
-    # Mapeamento da porta 3306 do contêiner (porta padrão do MySQL) para a mesma porta no host
-    # Permite que você se conecte ao MySQL no contêiner via localhost:3306
+
+    # Mapeamento da porta 3306 (porta padrão do MySQL) do contêiner para a mesma porta no host,
+    # permitindo o acesso ao banco de dados via localhost:3306.
     ports:
       - "3306:3306"
-    
-    # Conectando o serviço 'db' à rede interna 'app-network', para que a aplicação possa se comunicar com o banco de dados
+
+    # Volume para persistir os dados do MySQL,
+    # garantindo que os dados do banco não sejam perdidos quando o contêiner for removido.
+    volumes:
+      - db-data:/var/lib/mysql
+
+    # Conectando o serviço 'db' à rede interna 'app-network', permitindo a comunicação com a aplicação Laravel.
     networks:
       - app-network
 
-  # Definição do serviço 'phpmyadmin', que fornece uma interface gráfica para gerenciar o banco de dados MySQL
+  # Definição do serviço 'phpmyadmin', que fornece uma interface gráfica para gerenciamento do MySQL
   phpmyadmin:
-    # A imagem do PhpMyAdmin será baixada automaticamente
+    # Usando a imagem oficial do PhpMyAdmin.
     image: phpmyadmin/phpmyadmin
-    
-    # Configuração das variáveis de ambiente para o PhpMyAdmin
+
+    # Variáveis de ambiente para configurar a conexão do PhpMyAdmin com o banco de dados.
     environment:
-      # Nome do host (serviço) onde o MySQL está rodando. Neste caso, o serviço 'db' dentro da rede do Docker.
+      # Host (nome do serviço 'db') onde o MySQL está rodando.
       PMA_HOST: db
-      # Nome de usuário do banco de dados que o PhpMyAdmin usará para se conectar (mesmo usuário criado para o MySQL)
+      # Nome de usuário do banco que o PhpMyAdmin utilizará para se conectar.
       PMA_USER: user_laravel
-      # Senha do usuário para acessar o banco de dados
+      # Senha do usuário do banco de dados para o acesso via PhpMyAdmin.
       PMA_PASSWORD: password_laravel
-    
-    # Mapeamento da porta 8080 no host para a porta 80 do contêiner, permitindo acessar o PhpMyAdmin via http://localhost:8080
+
+    # Mapeamento da porta 8080 no host para a porta 80 do contêiner,
+    # permitindo o acesso ao PhpMyAdmin via http://localhost:8080.
     ports:
       - "8080:80"
-    
-    # Conectando o serviço 'phpmyadmin' à rede interna 'app-network', para que ele possa se comunicar com o banco de dados MySQL
+
+    # Conectando o serviço 'phpmyadmin' à rede 'app-network' para se comunicar com o serviço 'db'.
     networks:
       - app-network
 
-# Definição da rede interna 'app-network' usada para comunicação entre os contêineres
+# Definição da rede interna 'app-network' para comunicação entre os serviços da aplicação.
+# Usando o driver 'bridge', que cria uma rede isolada para os contêineres, permitindo comunicação interna segura.
 networks:
   app-network:
-    # Usando o driver 'bridge', que cria uma rede isolada para permitir a comunicação entre os serviços Docker
     driver: bridge
+
+# Definição de volumes persistentes, como o volume do banco de dados.
+# Isso garante que os dados do MySQL não sejam perdidos ao reiniciar os contêineres.
+volumes:
+  db-data:
