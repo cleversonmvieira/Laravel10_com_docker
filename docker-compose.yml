@@ -1,100 +1,81 @@
-# Define a versão do Docker Compose
-# A versão 3.8 é amplamente utilizada e estável, oferecendo suporte a diversas funcionalidades recentes.
 version: '3.8'
 
 services:
-  # Definição do serviço 'app', que representa a aplicação Laravel
+  # Serviço do PHP-FPM para rodar o Laravel
   app:
-    # A aplicação será construída com base no Dockerfile localizado na raiz do projeto ('.' indica o diretório atual)
-    build: .
-
-    # Mapeamento de portas do contêiner para o host
-    # A porta 8000 no host será mapeada para a porta 80 do contêiner,
-    # permitindo o acesso à aplicação via http://localhost:8000
-    ports:
-      - "8000:80"
-
-    # 'depends_on' garante que o serviço 'db' seja iniciado antes da aplicação.
-    depends_on:
-      - db
-
-    # Definindo variáveis de ambiente para configurar a conexão com o banco de dados.
-    environment:
-      - DB_HOST=db                    # Serviço 'db' que será o host do banco de dados.
-      - DB_DATABASE=laravel            # Nome do banco de dados usado pela aplicação Laravel.
-      - DB_USERNAME=user_laravel       # Usuário do banco de dados.
-      - DB_PASSWORD=password_laravel   # Senha do usuário do banco.
-
-    # Volume compartilhado entre o host e o contêiner.
-    # Mapeia o diretório local 'laravel' para '/var/www/html' dentro do contêiner,
-    # permitindo que alterações no código no host sejam refletidas no contêiner em tempo real.
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel_app
+    restart: unless-stopped
+    working_dir: /var/www/html
     volumes:
-      - ./laravel:/var/www/html
-
-    # Conectando o serviço 'app' à rede 'app-network' para comunicação interna entre os serviços.
-    networks:
-      - app-network
-
-  # Definição do serviço 'db', que representa o banco de dados MySQL
-  db:
-    # Usando a imagem 'mysql:8.0', uma versão específica e estável do MySQL para garantir consistência.
-    image: mysql:8.0
-
-    # Variáveis de ambiente para configurar o MySQL
+      - ./app:/var/www/html
     environment:
-      # Senha do usuário root do MySQL (necessária para administrar o banco).
-      MYSQL_ROOT_PASSWORD: root_password
-      # Nome do banco de dados a ser criado automaticamente no contêiner.
-      MYSQL_DATABASE: laravel
-      # Nome de usuário que será criado para acessar o banco de dados.
-      MYSQL_USER: user_laravel
-      # Senha do usuário que será criado para o banco de dados.
-      MYSQL_PASSWORD: password_laravel
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=laravel
+      - DB_USERNAME=user_laravel
+      - DB_PASSWORD=password_laravel
+    networks:
+      - laravel_network
 
-    # Mapeamento da porta 3306 (porta padrão do MySQL) do contêiner para a mesma porta no host,
-    # permitindo o acesso ao banco de dados via localhost:3306.
+  # Serviço Nginx para servir a aplicação Laravel
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./app:/var/www/html
+      - ./nginx:/etc/nginx/conf.d
+    depends_on:
+      - app
+    networks:
+      - laravel_network
+
+  # Banco de dados MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: password_laravel
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: user_laravel
+      MYSQL_PASSWORD: password_laravel
     ports:
       - "3306:3306"
-
-    # Volume para persistir os dados do MySQL,
-    # garantindo que os dados do banco não sejam perdidos quando o contêiner for removido.
     volumes:
-      - db-data:/var/lib/mysql
-
-    # Conectando o serviço 'db' à rede interna 'app-network', permitindo a comunicação com a aplicação Laravel.
+      - dbdata:/var/lib/mysql
     networks:
-      - app-network
+      - laravel_network
 
-  # Definição do serviço 'phpmyadmin', que fornece uma interface gráfica para gerenciamento do MySQL
+  # Interface do PHPMyAdmin
   phpmyadmin:
-    # Usando a imagem oficial do PhpMyAdmin.
     image: phpmyadmin/phpmyadmin
-
-    # Variáveis de ambiente para configurar a conexão do PhpMyAdmin com o banco de dados.
+    container_name: phpmyadmin_
+    restart: unless-stopped
     environment:
-      # Host (nome do serviço 'db') onde o MySQL está rodando.
-      PMA_HOST: db
+      PMA_HOST: mysql
       # Nome de usuário do banco que o PhpMyAdmin utilizará para se conectar.
       PMA_USER: user_laravel
       # Senha do usuário do banco de dados para o acesso via PhpMyAdmin.
       PMA_PASSWORD: password_laravel
-
-    # Mapeamento da porta 8080 no host para a porta 80 do contêiner,
-    # permitindo o acesso ao PhpMyAdmin via http://localhost:8080.
+      MYSQL_ROOT_PASSWORD: password_laravel
     ports:
-      - "8080:80"
-
-    # Conectando o serviço 'phpmyadmin' à rede 'app-network' para se comunicar com o serviço 'db'.
+      - "8081:80"
+    depends_on:
+      - mysql
     networks:
-      - app-network
+      - laravel_network
 
-# Definição da rede interna 'app-network' para comunicação entre os serviços da aplicação.
-# Usando o driver 'bridge', que cria uma rede isolada para os contêineres, permitindo comunicação interna segura.
+# Rede personalizada
 networks:
-  app-network:
+  laravel_network:
     driver: bridge
 
-# Definição de volumes persistentes, como o volume do banco de dados.
-# Isso garante que os dados do MySQL não sejam perdidos ao reiniciar os contêineres.
+# Volume para armazenar dados do banco de dados
 volumes:
-  db-data:
+  dbdata:
